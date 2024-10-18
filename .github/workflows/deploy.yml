@@ -1,0 +1,17 @@
+name: Deploy Go App
+
+on:
+  push:
+    branches:
+      - deploy-ec2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Create .env file
+        run: echo "SERVER_URL=${{ secrets.SERVER_URL }}"
+      - name: Login to Dockerhub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
