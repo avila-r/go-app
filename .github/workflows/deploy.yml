@@ -1,4 +1,4 @@
-name: Deploy Go App
+name: Deploy application
 
 on:
   push:
@@ -11,7 +11,28 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
       - name: Create .env file
         run: echo "SERVER_URL=${{ secrets.SERVER_URL }}"
+
       - name: Login to Dockerhub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build image
+        run: docker build -t ${{ secrets.IMAGE_NAME }} .
+
+      - name: Push image to Docker Hub
+        run: docker push ${{ secrets.IMAGE_NAME }}:latest
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull image
+        run: docker pull ${{ secrets.IMAGE_NAME }}:latest
+
+      - name: Clean containers
+        run: docker rm -f ${{ secrets.CONTAINER_NAME }}
+
+      - name: Run container
+        run: docker run -d -p ${{ secrets.CONTAINER_PORT }} --name ${{ secrets.CONTAINER_NAME }} aviladev/go-app:latest
